@@ -1,4 +1,29 @@
+---
+title: "About the project"
+date: 4 Nov 2018
+output:
+html_document:
+theme: cerulean
+---
+<style type="text/css">
 
-# About the project
+body{ /* Normal  */
+      font-size: 12px;
+  }
+  
+h1 { /* Header 1 */
+  font-size: 18px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkBlue;
+}  
+</style>
 
-*Write a short description about the course and add a link to your github repository here. This is an R markdown (.Rmd) file so you can use R markdown syntax. See the 'Useful links' page in the mooc area (chapter 1) for instructions.*
+# Instructions
+Write a short description about the course and add a link to your github repository here. This is an R markdown (.Rmd) file so you can use R markdown syntax. 
+See the 'Useful links' page in the mooc area (chapter 1) for instructions.
+
+# Description
+This is my Open Data Science course book,containing all the exercise solutions and also some random projects for extra practice.
+
+# My GitHub link
+https://github.com/Shabs86/IODS-project
