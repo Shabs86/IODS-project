@@ -31,6 +31,11 @@ h3 { /* Header 3 */
   font-family: "Times New Roman", Times, serif;
   color: DarkBlue;
 }
+h4 { /* Header 4 */
+  font-size: 14px;
+  font-family: "Times New Roman", Times, serif;
+  color: Black;
+}
 code.r{ /* Code block */
     font-size: 12px;
 }
@@ -50,12 +55,12 @@ analysis_data <- read.csv("~/Documents/GitHub/IODS-project/data/learning2014.csv
 ```{r echo=T}
 str(analysis_data)
 ```
-The dataset contains a total of 166 observations with 7 variables like gender, age, attitude score and other questions. 
+#### The dataset contains a total of 166 observations with 7 variables like gender, age, attitude score and other questions. 
 
 ```{r echo=T}
 dim(analysis_data)
 ```
-the above command returns the exact dimensions of the dataset we have. The dataset confirms that there are 166 rows with 7 columns containing the variables.  
+#### The above command returns the exact dimensions of the dataset we have. The dataset confirms that there are 166 rows with 7 columns containing the variables.  
 
 ## Overview of the dataset
 
@@ -88,16 +93,86 @@ summary(analysis_data$surf)
 summary(analysis_data$points)
 ```
 
+#### There are 110 females compared to 56 males in this dataset. The distribution of ages of students are from 17 to 55, with an average age of 25.51 years. Majority of students (upto 3rd quartile) are below 30 years, making the variable heavily skewed.To look at how these different variables could be inter-related, we plot a plot below.
+
 ### Load the GGally and ggplot2 libraries
 ```{r echo=T}
 library(GGally)
 library(ggplot2)
 ```
 
-### create plot matrix with ggpairs()
+### Create plot matrix
 ```{r echo=T}
-ggpairs(analysis_data, mapping = aes( col = gender, alpha = 0.3 ), lower = list(combo = wrap("facethist", bins = 20)))
+ggpairs(analysis_data, mapping = aes( col = gender, alpha = 0.2 ), lower = list(combo = wrap("facethist", bins = 20)))
 ```
 
-### 
+#### We see an interesting set of inter-relationships amongst the variables ranging from positive to negative correlation. However, all these relationships are seen here one-to-one, which is biased, since the final scores are dependent on various variables and hence a linear model needs to be developed to investigate this. 
+
+## Regression Model
+### Create a regression model with multiple explanatory variables
+```{r echo=T}
+my_model <- lm(points ~ attitude + age + stra, data = analysis_data)
+```
+
+### Summary of the model
+```{r echo=T}
+summary(my_model)
+```
+
+#### We see here that attitude is highly associated with the dependent variable, exam points as evidenced by the highly significant p-value of 2.56e-09, much less than the alpha level of 0.05. 
+
+#### Interestingly, Age and strategic questions have negative beta values.
+
+### Create a regression model with non-significant variables removed
+```{r echo=T}
+my_model2 <- lm(points ~  attitude, data = analysis_data)
+```
+
+### Summary of the new model
+```{r echo=T}
+summary(my_model2)
+```
+
+#### When we remove the non-significant variables, Age and stategic questions, we see that the t-value of attitude variable increases and the p-value also decreases to 4.12e-09, much below than 2.56e-09. 
+
+
+## Summary of fitted model
+
+#### In the initial model, with attitude, age and stra variables, we see that these three variables taken together explain 18.96% of the exam points (Adjusted R-squared:  0.1896)
+
+#### However, attitude variable explains 18.56% of the exam points (Adjusted R-squared: 0.1856), which is little bit lesser than the previous model. 
+
+
+## Model Diagnostics
+
+### Diagnostic plots using the plot() function. We plot these: Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage
+
+```{r echo=T}
+par(mfrow = c(2,2))
+plot(my_model, which = c(1, 2, 5))
+```
+
+#### Assumptions of model:
+#### 1). Normality of errors
+#### From plot 1 above we see that the fitted line is around the zero value, indicating that errors are normal.
+#### 2). Constant variance of errors
+#### From plot 2 above, we see that almost all points are on the diagonal line indicating that this assumption is held. However the last few observations could be of possible concern as they deviate away from the line quite a bit. 
+#### 3). No single observations influence the model
+#### Majority of observations are far beyond the Cook’s distance lines, but a few of them as numbered like observations 2, 4, 56 are well beyond the lines presenting a potential problem to the model's explanation. 
+#### To investigate this better, we could exclude obsevrations 2, 4 and 56, and then re-run the analysis again.
+#### 
+#### 
+
+### New Model to understand the influence of influential observations
+```{r echo=T}
+analysis_data_new <- analysis_data[-c(2, 4, 56), ]
+my_model3 <- lm(points ~ attitude + age + stra, data = analysis_data_new)
+summary(my_model3)
+```
+
+#### If I exclude the cases 2, 4 and 56 from the analysis, the R2 changes from 0.1896 to 0.2271. Pretty big impact!
+
+#### The above plots show potential problematic cases with certain row numbers of the data in the dataset. If some cases are identified across all four plots, we might want to take a close look at them individually.
+
+
 
