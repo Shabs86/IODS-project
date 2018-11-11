@@ -11,7 +11,6 @@ data1 <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt
 # The output from above is the total number of observations (183 obs) 
 # and  total variables (n = 7)
 # dim(data1)
-# [1] 183  60
 # The above tells us that data1 has 183 rows and 7 columns
 
 # Create an analysis dataset
