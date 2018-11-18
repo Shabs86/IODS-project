@@ -1,0 +1,101 @@
+---
+title: "Regression and model validation"
+date: 11 Nov 2018
+output:
+html_document:
+theme: cerulean
+---
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 12px;
+  }
+td {  /* Table  */
+  font-size: 8px;
+}
+h1.title {
+  font-size: 30px;
+  color: DarkRed;
+}
+h1 { /* Header 1 */
+  font-size: 22px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 20px;
+  color: DarkBlue;
+}
+h3 { /* Header 3 */
+  font-size: 18px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkBlue;
+}
+h4 { /* Header 4 */
+  font-size: 14px;
+  font-family: "Times New Roman", Times, serif;
+  color: Black;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+## 1: Read Data
+```{r echo=T}
+library("readxl")
+library("ggplot2")
+library("data.table")
+library("dplyr")
+library("stringr")
+library("tidyr")
+library("GGally")
+library("ggplot2")
+
+analysis_data <- read.csv("~/Documents/GitHub/IODS-project/data/alc.csv", 
+                    sep=",", header=TRUE)
+```
+
+### Description of data
+```{r echo=T}
+glimpse(analysis_data)
+```
+
+This dataset is about the student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. 
+
+The above dataset is a combination from two other datasets regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). The response variable is modeled under binary/five-level classification and regression tasks.
+
+
+The purpose of your analysis is to study the relationships between high/low alcohol consumption and some of the other variables in the data. To do this, choose 4 interesting variables in the data and for each of them, present your personal hypothesis about their relationships with alcohol consumption. (0-1 point)
+
+### First we gather columns into key-value pairs and then use glimpse() at the resulting data
+```{r echo=T}
+gather(analysis_data) %>% glimpse
+```
+
+### We draw a bar plot of each variable
+```{r echo=T}
+gather(analysis_data) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+```
+
+## 2: Variables chosen for analysis
+age - Children's age has been shown to be important for their alcohol consumption. (Reference for this -https://www.sciencedirect.com/science/article/pii/S2171206915000022)
+
+sex - Alcohol consumption could be gender linked as has been shown through previous research. Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2844334/
+
+Pstatus - parent's cohabitation status could be an important determinant in alcohol consumption. Parental divorce/separation is among the most commonly endorsed adverse childhood events and has been shown to increase subsequent risk of alcohol dependence and problems across adolescence and early adulthood. (Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4916852/)
+
+famrel - This indicates the quality of family relationships and form a part of social variable for any child. Previous research (https://www.sciencedirect.com/science/article/pii/S2171206915000022) has shown to be such a case.
+
+## 3: Explore distributions of chosen variables and their relationships with alcohol consumption
+```{r echo=T}
+chosen_variables <- c("age", "sex", "Pstatus", "famrel", "high_use")
+chosen_data <- select(analysis_data, one_of(chosen_variables))
+
+ggpairs(chosen_data, mapping = aes( col = sex, alpha = 0.2 ), lower = list(combo = wrap("facethist", bins = 20)))
+```
+
+As we can see, all the four chosen variables exhibit the 
