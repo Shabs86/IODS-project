@@ -1,6 +1,6 @@
 ---
-title: "Regression and model validation"
-date: 11 Nov 2018
+title: "Logistic Regression"
+date: 18 Nov 2018
 output:
 html_document:
 theme: cerulean
@@ -44,7 +44,7 @@ pre { /* Code block - determines code spacing between lines */
 }
 </style>
 
-## 1: Read Data
+## Read Data
 ```{r echo=T}
 library("readxl")
 library("ggplot2")
@@ -81,7 +81,7 @@ gather(analysis_data) %>% glimpse
 gather(analysis_data) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
 ```
 
-## 2: Variables chosen for analysis
+## Variables chosen for analysis
 age - Children's age has been shown to be important for their alcohol consumption. (Reference for this -https://www.sciencedirect.com/science/article/pii/S2171206915000022)
 
 sex - Alcohol consumption could be gender linked as has been shown through previous research. Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2844334/
