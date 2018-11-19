@@ -54,48 +54,264 @@ library("stringr")
 library("tidyr")
 library("GGally")
 library("ggplot2")
+library("MASS")
 
-analysis_data <- read.csv("~/Documents/GitHub/IODS-project/data/alc.csv", 
+analysis.data <- read.csv("~/Documents/GitHub/IODS-project/data/alc.csv", 
                     sep=",", header=TRUE)
 ```
 
 ### Description of data
 ```{r echo=T}
-glimpse(analysis_data)
+glimpse(analysis.data)
 ```
 
-This dataset is about the student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. 
+### This dataset is about the student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. 
 
-The above dataset is a combination from two other datasets regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). The response variable is modeled under binary/five-level classification and regression tasks.
+### The above dataset is a combination from two other datasets regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). The response variable is modeled under binary/five-level classification and regression tasks.
 
 
-The purpose of your analysis is to study the relationships between high/low alcohol consumption and some of the other variables in the data. To do this, choose 4 interesting variables in the data and for each of them, present your personal hypothesis about their relationships with alcohol consumption. (0-1 point)
+### The purpose of your analysis is to study the relationships between high/low alcohol consumption and some of the other variables in the data. To do this, choose 4 interesting variables in the data and for each of them, present your personal hypothesis about their relationships with alcohol consumption. (0-1 point)
 
 ### First we gather columns into key-value pairs and then use glimpse() at the resulting data
 ```{r echo=T}
-gather(analysis_data) %>% glimpse
+gather(analysis.data) %>% glimpse
 ```
 
 ### We draw a bar plot of each variable
 ```{r echo=T}
-gather(analysis_data) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+gather(analysis.data) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
 ```
 
 ## Variables chosen for analysis
-age - Children's age has been shown to be important for their alcohol consumption. (Reference for this -https://www.sciencedirect.com/science/article/pii/S2171206915000022)
+### age - Children's age has been shown to be important for their alcohol consumption. (Reference for this -https://www.sciencedirect.com/science/article/pii/S2171206915000022)
 
-sex - Alcohol consumption could be gender linked as has been shown through previous research. Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2844334/
+### sex - Alcohol consumption could be gender linked as has been shown through previous research. Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2844334/
 
-Pstatus - parent's cohabitation status could be an important determinant in alcohol consumption. Parental divorce/separation is among the most commonly endorsed adverse childhood events and has been shown to increase subsequent risk of alcohol dependence and problems across adolescence and early adulthood. (Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4916852/)
+### Pstatus - parent's cohabitation status could be an important determinant in alcohol consumption. Parental divorce/separation is among the most commonly endorsed adverse childhood events and has been shown to increase subsequent risk of alcohol dependence and problems across adolescence and early adulthood. (Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4916852/)
 
-famrel - This indicates the quality of family relationships and form a part of social variable for any child. Previous research (https://www.sciencedirect.com/science/article/pii/S2171206915000022) has shown to be such a case.
+### famrel - This indicates the quality of family relationships and form a part of social variable for any child. Previous research (https://www.sciencedirect.com/science/article/pii/S2171206915000022) has shown to be such a case.
 
-## 3: Explore distributions of chosen variables and their relationships with alcohol consumption
+## Explore distributions of chosen variables and their relationships with alcohol consumption
 ```{r echo=T}
-chosen_variables <- c("age", "sex", "Pstatus", "famrel", "high_use")
-chosen_data <- select(analysis_data, one_of(chosen_variables))
+library("dplyr")
+chosen.data <- analysis.data[, c("age", "sex", "Pstatus", "famrel", "high_use")]
 
-ggpairs(chosen_data, mapping = aes( col = sex, alpha = 0.2 ), lower = list(combo = wrap("facethist", bins = 20)))
+# Draw a bar plot of chosen variables
+gather(chosen.data) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+
+# Draw a correlation plot of chosen variables
+ggpairs(chosen.data, mapping = aes( col = sex, alpha = 0.2 ), lower = list(combo = wrap("facethist", bins = 20)))
+
+# Get cross tabulation tables for variables 
+library(gmodels)
+CrossTable(chosen.data$sex, chosen.data$high_use)
+CrossTable(chosen.data$age, chosen.data$high_use)
+CrossTable(chosen.data$Pstatus, chosen.data$high_use)
+CrossTable(chosen.data$famrel, chosen.data$high_use)
 ```
 
-As we can see, all the four chosen variables exhibit the 
+### As we can see, all the four chosen variables exhibit good, reasonable levels of correlation/association with alcohol usage, especially from the correlation plot. Hence, the choice of 4 variables above was a fair one and exploring how they all might be associated to alcohol status would give us an idea about thei relative contributions. However, as we see that parent's cohabitation status distribution wrt alcohol usgae doesnt seem to be that different across the various levels. 
+
+## Logistic regression to statistically explore the relationship further
+
+```{r echo=T}
+# Model with glm()
+chosen.mod <- glm(high_use ~ Pstatus + age + sex + famrel, data = chosen.data, family = "binomial")
+summary(chosen.mod)
+
+# Compute odds ratios (OR)
+chosen.mod.OR <- coef(chosen.mod) %>% exp
+
+# Compute confidence intervals (CI)
+confint(chosen.mod)
+chosen.mod.CI <- confint(chosen.mod) %>% exp
+
+# print out the odds ratios with their confidence intervals
+cbind(chosen.mod.OR, chosen.mod.CI)
+```
+
+### We see from above that alcohol use is significantly associated with gender (sex) and as seen from the summary of the model above that usage is highly more lnked with males than females (P-value = 6.21e-05). From the table detailing odds ratios & corresponding CI, we see that male students are 2.5 times more likely than female students.
+
+### However, as suspected from the correlation plots/data distribution parental cohabitation status (Pstatus). And the OR for it is 0.8759084 less than 1. An OR of 1 indicates that odds for both living together(T) or apart(A) are equal and what we have here is that the odds for both parental statuses, are not associated with alcohol usage. 
+
+### Also, we see that family relationship (famrel) and student's age (age) are weakly associated with alcohol usage and not so strongly as gender before, with p-values of 0.0106 and 0.0173 respectively. 
+
+## Predictive power of the model
+
+```{r echo=T}
+# predict() the probability of high_use
+probabilities <- predict(chosen.mod, type = "response")
+
+# add the predicted probabilities to 'alc'
+chosen.data <- mutate(chosen.data, probability = probabilities)
+
+# use the probabilities to make a prediction of high_use
+chosen.data <- mutate(chosen.data, prediction = probabilities > 0.5)
+
+# tabulate the target variable versus the predictions
+table(high_use = chosen.data$high_use, prediction = chosen.data$prediction)
+
+# initialize a plot of 'high_use' versus 'probability' in 'alc'
+g <- ggplot(chosen.data, aes(x = probability, y = high_use, col = prediction))
+
+# define the geom as points and draw the plot
+g + geom_point()
+
+# tabulate the target variable versus the predictions
+table(high_use = chosen.data$high_use, prediction = chosen.data$prediction)
+
+# Adjust the code: Use %>% to apply the prop.table() function on the output of table()
+table(high_use = chosen.data$high_use, prediction = chosen.data$prediction) %>% prop.table()
+
+#Adjust the code: Use %>% to apply the addmargins() function on the output of prop.table()
+table(high_use = chosen.data$high_use, prediction = chosen.data$prediction) %>% prop.table() %>% addmargins()
+
+# define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data using the above function
+loss_func(class = chosen.data$high_use, prob = chosen.data$probability) 
+
+# Calculate missclassification error using an R package to confirm the above results
+library(InformationValue)
+optCutOff <- optimalCutoff(chosen.data$high_use, chosen.data$prediction)[1]
+misClassError(chosen.data$high_use, chosen.data$prediction, threshold = optCutOff)
+
+# Calculating concordance
+Concordance(chosen.data$high_use, chosen.data$prediction)
+
+# Calculating sensitivity/specificty of our model
+sensitivity(chosen.data$high_use, chosen.data$prediction, threshold = optCutOff)
+specificity(chosen.data$high_use, chosen.data$prediction, threshold = optCutOff)
+
+# Construct an ROC curve 
+library(plotROC)
+plotROC(chosen.data$high_use, chosen.data$prediction)
+```
+
+### One of the results gleaned from above is that the prediction errors calculated from using our-own defined function and teh R package, are lower than what was expected using the 4 set of predictors we have used here. The errors we have is 28% indicating that the above model has an accuracy of (1 - 0.28)% i.e., 72%. 
+
+### Sensitivity (or True Positive Rate) is the percentage of 1’s (actuals) correctly predicted by the model, while, specificity is the percentage of 0’s (actuals) correctly predicted. Specificity can also be calculated as 1-False Positive Rate. And we get a sensitivity of 14% which is quite low. 
+
+### Ideally, the model-calculated-probability-scores of all actual Positive’s, (aka Ones) should be greater than the model-calculated-probability-scores of ALL the Negatives (aka Zeroes). Such a model is said to be perfectly concordant and a highly reliable one. In simpler words, of all combinations of 1-0 pairs (actuals), Concordance is the percentage of pairs, whose scores of actual positive’s are greater than the scores of actual negative’s. For a perfect model, this will be 100%. So, the higher the concordance, the better is the quality of model. The above model with a concordance of 13.5% is quite a low quality model.
+
+## Cross-validation
+
+```{r echo=T}
+## K-fold cross-validation
+library(boot)
+
+K <- nrow(chosen.data) #defines the leave-one-out method
+cv_chosen <- cv.glm(data = chosen.data, cost = loss_func, glmfit = chosen.mod, K = 10)
+
+## average number of wrong predictions in the cross validation
+cv_chosen$delta[1]
+```
+
+What we see above is that the average predicton error from the above model is 0.31 which is much higher than 0.26. Hence, the model explored in Datacamp is better for predictive power of alcohol use than this one explored here. 
+
+## Can we get a better model?
+
+What we chose above is by intuition and secondary research, which is not always optimal as evidenced here by very poor predictive power, sensitivity and low concordance. One way to choose predictors which increase the prediction accuracy is by adding/dropping variables in successive models, such that all variable combinations are chosen and each model is compared with each other using a metric to find the model with highest prediction power. 
+To do this, we use stepwise regression which would do this
+
+```{r echo=T}
+## Define big model to compare.
+big.model <- glm(high_use ~ school + sex + age + address + famsize + Pstatus + G3 + failures + famrel +                famsup + freetime + goout + schoolsup + absences + health + Medu + Fedu + 
+                   activities + paid, data = analysis.data, family = binomial(link = "logit"))
+
+## Define null model to compare.
+null.model <- glm(high_use ~ 1, data = analysis.data, family = binomial(link = "logit"))
+
+## Determining model with step procedure
+step.model <- step(null.model, scope = list(upper = big.model), direction = "both",
+             test = "Chisq", data = analysis.data)
+```
+
+## Prediction of final model
+
+```{r echo=T}
+final.model.coeff <- as.data.frame(step.model$coefficients)
+final.mod <- glm(high_use ~ sex + address + failures + famrel + goout + absences + 
+                   activities + paid, data = analysis.data, family = binomial(link = "logit"))
+summary(final.mod)
+
+# Get final model data
+final.data <- analysis.data[, c("goout", "absences", "sex", "famrel", "address", 
+                                 "activities", "paid", "failures", "high_use")]
+
+# predict() the probability of high_use
+probabilities.final.mod <- predict(final.mod, type = "response")
+
+# add the predicted probabilities to 'alc'
+final.data <- mutate(final.data, probability = probabilities.final.mod)
+
+# use the probabilities to make a prediction of high_use
+final.data <- mutate(final.data, prediction = probabilities.final.mod > 0.5)
+
+# tabulate the target variable versus the predictions
+table(high_use = final.data$high_use, prediction = final.data$prediction)
+
+# initialize a plot of 'high_use' versus 'probability' in 'alc'
+g_final <- ggplot(final.data, aes(x = probability, y = high_use, col = prediction))
+
+# define the geom as points and draw the plot
+g_final + geom_point()
+
+# tabulate the target variable versus the predictions
+table(high_use = final.data$high_use, prediction = final.data$prediction)
+
+# Adjust the code: Use %>% to apply the prop.table() function on the output of table()
+table(high_use = final.data$high_use, prediction = final.data$prediction) %>% prop.table()
+
+#Adjust the code: Use %>% to apply the addmargins() function on the output of prop.table()
+table(high_use = final.data$high_use, prediction = final.data$prediction) %>% prop.table() %>% addmargins()
+
+# define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data using the above function
+loss_func(class = final.data$high_use, prob = final.data$probability) 
+
+# Calculate missclassification error using an R package to confirm the above results
+library(InformationValue)
+optCutOff_final <- optimalCutoff(final.data$high_use, final.data$prediction)[1]
+misClassError(final.data$high_use, final.data$prediction, threshold = optCutOff_final)
+
+# Calculating concordance
+Concordance(final.data$high_use, final.data$prediction)
+
+# Calculating sensitivity/specificty of our model
+sensitivity(final.data$high_use, final.data$prediction, threshold = optCutOff)
+specificity(final.data$high_use, final.data$prediction, threshold = optCutOff)
+
+# Construct an ROC curve 
+library(plotROC)
+
+# ROC for Final chosen model
+plotROC(final.data$high_use,  final.data$prediction)
+
+# ROC for initially chosen model
+plotROC(chosen.data$high_use, chosen.data$prediction)
+
+## K-fold cross-validation
+library(boot)
+
+K_final <- nrow(final.data) #defines the leave-one-out method
+cv_final <- cv.glm(data = final.data, cost = loss_func, glmfit = final.mod, K = 10)
+
+## average number of wrong predictions in the cross validation
+cv_final$delta[1]
+```
+
+### As we see that the final selected model outcome from the stepwise regression improved the prediction accuracy by a large amount. The ROC has improved to 70% from 55% in our chosen model initially. 
+
+### And the prediction error is around 19% for the stepwise regresion model compared to 29% for the chosen model earlier. 
+
+### Also, one doing a 10-fold cross-validation above, we see that the final model from stepwise regression has smaller prediction error (21%), when compared to 29% (chosen model above) & 26% (datacamp exercise)
