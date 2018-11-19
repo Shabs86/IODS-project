@@ -44,6 +44,8 @@ pre { /* Code block - determines code spacing between lines */
 }
 </style>
 
+# Logistic Regression (Week 3)
+
 ## Read Data
 ```{r echo=T}
 library("readxl")
@@ -65,12 +67,12 @@ analysis.data <- read.csv("~/Documents/GitHub/IODS-project/data/alc.csv",
 glimpse(analysis.data)
 ```
 
-### This dataset is about the student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. 
+#### This dataset is about the student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. 
 
-### The above dataset is a combination from two other datasets regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). The response variable is modeled under binary/five-level classification and regression tasks.
+#### The above dataset is a combination from two other datasets regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). The response variable is modeled under binary/five-level classification and regression tasks.
 
 
-### The purpose of your analysis is to study the relationships between high/low alcohol consumption and some of the other variables in the data. To do this, choose 4 interesting variables in the data and for each of them, present your personal hypothesis about their relationships with alcohol consumption. (0-1 point)
+#### The purpose of your analysis is to study the relationships between high/low alcohol consumption and some of the other variables in the data. To do this, choose 4 interesting variables in the data and for each of them, present your personal hypothesis about their relationships with alcohol consumption. (0-1 point)
 
 ### First we gather columns into key-value pairs and then use glimpse() at the resulting data
 ```{r echo=T}
@@ -83,13 +85,14 @@ gather(analysis.data) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free"
 ```
 
 ## Variables chosen for analysis
-### age - Children's age has been shown to be important for their alcohol consumption. (Reference for this -https://www.sciencedirect.com/science/article/pii/S2171206915000022)
 
-### sex - Alcohol consumption could be gender linked as has been shown through previous research. Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2844334/
+#### age - Children's age has been shown to be important for their alcohol consumption. (Reference for this -https://www.sciencedirect.com/science/article/pii/S2171206915000022)
 
-### Pstatus - parent's cohabitation status could be an important determinant in alcohol consumption. Parental divorce/separation is among the most commonly endorsed adverse childhood events and has been shown to increase subsequent risk of alcohol dependence and problems across adolescence and early adulthood. (Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4916852/)
+#### sex - Alcohol consumption could be gender linked as has been shown through previous research. Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2844334/
 
-### famrel - This indicates the quality of family relationships and form a part of social variable for any child. Previous research (https://www.sciencedirect.com/science/article/pii/S2171206915000022) has shown to be such a case.
+#### Pstatus - parent's cohabitation status could be an important determinant in alcohol consumption. Parental divorce/separation is among the most commonly endorsed adverse childhood events and has been shown to increase subsequent risk of alcohol dependence and problems across adolescence and early adulthood. (Reference for this - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4916852/)
+
+#### famrel - This indicates the quality of family relationships and form a part of social variable for any child. Previous research (https://www.sciencedirect.com/science/article/pii/S2171206915000022) has shown to be such a case.
 
 ## Explore distributions of chosen variables and their relationships with alcohol consumption
 ```{r echo=T}
@@ -110,7 +113,7 @@ CrossTable(chosen.data$Pstatus, chosen.data$high_use)
 CrossTable(chosen.data$famrel, chosen.data$high_use)
 ```
 
-### As we can see, all the four chosen variables exhibit good, reasonable levels of correlation/association with alcohol usage, especially from the correlation plot. Hence, the choice of 4 variables above was a fair one and exploring how they all might be associated to alcohol status would give us an idea about thei relative contributions. However, as we see that parent's cohabitation status distribution wrt alcohol usgae doesnt seem to be that different across the various levels. 
+#### As we can see, all the four chosen variables exhibit good, reasonable levels of correlation/association with alcohol usage, especially from the correlation plot. Hence, the choice of 4 variables above was a fair one and exploring how they all might be associated to alcohol status would give us an idea about thei relative contributions. However, as we see that parent's cohabitation status distribution wrt alcohol usgae doesnt seem to be that different across the various levels. 
 
 ## Logistic regression to statistically explore the relationship further
 
@@ -130,11 +133,11 @@ chosen.mod.CI <- confint(chosen.mod) %>% exp
 cbind(chosen.mod.OR, chosen.mod.CI)
 ```
 
-### We see from above that alcohol use is significantly associated with gender (sex) and as seen from the summary of the model above that usage is highly more lnked with males than females (P-value = 6.21e-05). From the table detailing odds ratios & corresponding CI, we see that male students are 2.5 times more likely than female students.
+#### We see from above that alcohol use is significantly associated with gender (sex) and as seen from the summary of the model above that usage is highly more lnked with males than females (P-value = 6.21e-05). From the table detailing odds ratios & corresponding CI, we see that male students are 2.5 times more likely than female students.
 
-### However, as suspected from the correlation plots/data distribution parental cohabitation status (Pstatus). And the OR for it is 0.8759084 less than 1. An OR of 1 indicates that odds for both living together(T) or apart(A) are equal and what we have here is that the odds for both parental statuses, are not associated with alcohol usage. 
+#### However, as suspected from the correlation plots/data distribution parental cohabitation status (Pstatus). And the OR for it is 0.8759084 less than 1. An OR of 1 indicates that odds for both living together(T) or apart(A) are equal and what we have here is that the odds for both parental statuses, are not associated with alcohol usage. 
 
-### Also, we see that family relationship (famrel) and student's age (age) are weakly associated with alcohol usage and not so strongly as gender before, with p-values of 0.0106 and 0.0173 respectively. 
+#### Also, we see that family relationship (famrel) and student's age (age) are weakly associated with alcohol usage and not so strongly as gender before, with p-values of 0.0106 and 0.0173 respectively. 
 
 ## Predictive power of the model
 
@@ -192,11 +195,11 @@ library(plotROC)
 plotROC(chosen.data$high_use, chosen.data$prediction)
 ```
 
-### One of the results gleaned from above is that the prediction errors calculated from using our-own defined function and teh R package, are lower than what was expected using the 4 set of predictors we have used here. The errors we have is 28% indicating that the above model has an accuracy of (1 - 0.28)% i.e., 72%. 
+#### One of the results gleaned from above is that the prediction errors calculated from using our-own defined function and teh R package, are lower than what was expected using the 4 set of predictors we have used here. The errors we have is 28% indicating that the above model has an accuracy of (1 - 0.28)% i.e., 72%. 
 
-### Sensitivity (or True Positive Rate) is the percentage of 1’s (actuals) correctly predicted by the model, while, specificity is the percentage of 0’s (actuals) correctly predicted. Specificity can also be calculated as 1-False Positive Rate. And we get a sensitivity of 14% which is quite low. 
+#### Sensitivity (or True Positive Rate) is the percentage of 1’s (actuals) correctly predicted by the model, while, specificity is the percentage of 0’s (actuals) correctly predicted. Specificity can also be calculated as 1-False Positive Rate. And we get a sensitivity of 14% which is quite low. 
 
-### Ideally, the model-calculated-probability-scores of all actual Positive’s, (aka Ones) should be greater than the model-calculated-probability-scores of ALL the Negatives (aka Zeroes). Such a model is said to be perfectly concordant and a highly reliable one. In simpler words, of all combinations of 1-0 pairs (actuals), Concordance is the percentage of pairs, whose scores of actual positive’s are greater than the scores of actual negative’s. For a perfect model, this will be 100%. So, the higher the concordance, the better is the quality of model. The above model with a concordance of 13.5% is quite a low quality model.
+#### Ideally, the model-calculated-probability-scores of all actual Positive’s, (aka Ones) should be greater than the model-calculated-probability-scores of ALL the Negatives (aka Zeroes). Such a model is said to be perfectly concordant and a highly reliable one. In simpler words, of all combinations of 1-0 pairs (actuals), Concordance is the percentage of pairs, whose scores of actual positive’s are greater than the scores of actual negative’s. For a perfect model, this will be 100%. So, the higher the concordance, the better is the quality of model. The above model with a concordance of 13.5% is quite a low quality model.
 
 ## Cross-validation
 
@@ -215,8 +218,9 @@ What we see above is that the average predicton error from the above model is 0.
 
 ## Can we get a better model?
 
-What we chose above is by intuition and secondary research, which is not always optimal as evidenced here by very poor predictive power, sensitivity and low concordance. One way to choose predictors which increase the prediction accuracy is by adding/dropping variables in successive models, such that all variable combinations are chosen and each model is compared with each other using a metric to find the model with highest prediction power. 
-To do this, we use stepwise regression which would do this
+####What we chose above is by intuition and secondary research, which is not always optimal as evidenced here by very poor predictive power, sensitivity and low concordance. One way to choose predictors which increase the prediction accuracy is by adding/dropping variables in successive models, such that all variable combinations are chosen and each model is compared with each other using a metric to find the model with highest prediction power. 
+
+#### To do this, we use stepwise regression which would do this
 
 ```{r echo=T}
 ## Define big model to compare.
@@ -310,8 +314,8 @@ cv_final <- cv.glm(data = final.data, cost = loss_func, glmfit = final.mod, K = 
 cv_final$delta[1]
 ```
 
-### As we see that the final selected model outcome from the stepwise regression improved the prediction accuracy by a large amount. The ROC has improved to 70% from 55% in our chosen model initially. 
+#### As we see that the final selected model outcome from the stepwise regression improved the prediction accuracy by a large amount. The ROC has improved to 70% from 55% in our chosen model initially. 
 
-### And the prediction error is around 19% for the stepwise regresion model compared to 29% for the chosen model earlier. 
+#### And the prediction error is around 19% for the stepwise regresion model compared to 29% for the chosen model earlier. 
 
-### Also, one doing a 10-fold cross-validation above, we see that the final model from stepwise regression has smaller prediction error (21%), when compared to 29% (chosen model above) & 26% (datacamp exercise)
+#### Also, one doing a 10-fold cross-validation above, we see that the final model from stepwise regression has smaller prediction error (21%), when compared to 29% (chosen model above) & 26% (datacamp exercise)

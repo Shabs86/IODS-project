@@ -164,6 +164,8 @@ pre { /* Code block - determines code spacing between lines */
     font-size: 14px;
 }
 </style>
+<div id="logistic-regression-week-3" class="section level1">
+<h1>Logistic Regression (Week 3)</h1>
 <div id="read-data" class="section level2">
 <h2>Read Data</h2>
 <pre class="r"><code>library(&quot;readxl&quot;)
@@ -1044,15 +1046,16 @@ cv_final &lt;- cv.glm(data = final.data, cost = loss_func, glmfit = final.mod, K
 
 ## average number of wrong predictions in the cross validation
 cv_final$delta[1]</code></pre>
-<pre><code>## [1] 0.2120419</code></pre>
-<div id="as-we-see-that-the-final-selected-model-outcome-from-the-stepwise-regression-improved-the-prediction-accuracy-by-a-large-amount.-the-roc-has-improved-to-70-from-55-in-our-chosen-model-initially." class="section level3">
-<h3>As we see that the final selected model outcome from the stepwise regression improved the prediction accuracy by a large amount. The ROC has improved to 70% from 55% in our chosen model initially.</h3>
+<pre><code>## [1] 0.2041885</code></pre>
+<div id="as-we-see-that-the-final-selected-model-outcome-from-the-stepwise-regression-improved-the-prediction-accuracy-by-a-large-amount.-the-roc-has-improved-to-70-from-55-in-our-chosen-model-initially." class="section level4">
+<h4>As we see that the final selected model outcome from the stepwise regression improved the prediction accuracy by a large amount. The ROC has improved to 70% from 55% in our chosen model initially.</h4>
 </div>
-<div id="and-the-prediction-error-is-around-19-for-the-stepwise-regresion-model-compared-to-29-for-the-chosen-model-earlier." class="section level3">
-<h3>And the prediction error is around 19% for the stepwise regresion model compared to 29% for the chosen model earlier.</h3>
+<div id="and-the-prediction-error-is-around-19-for-the-stepwise-regresion-model-compared-to-29-for-the-chosen-model-earlier." class="section level4">
+<h4>And the prediction error is around 19% for the stepwise regresion model compared to 29% for the chosen model earlier.</h4>
 </div>
-<div id="also-one-doing-a-10-fold-cross-validation-above-we-see-that-the-final-model-from-stepwise-regression-has-smaller-prediction-error-21-when-compared-to-29-chosen-model-above-26-datacamp-exercise" class="section level3">
-<h3>Also, one doing a 10-fold cross-validation above, we see that the final model from stepwise regression has smaller prediction error (21%), when compared to 29% (chosen model above) &amp; 26% (datacamp exercise)</h3>
+<div id="also-one-doing-a-10-fold-cross-validation-above-we-see-that-the-final-model-from-stepwise-regression-has-smaller-prediction-error-21-when-compared-to-29-chosen-model-above-26-datacamp-exercise" class="section level4">
+<h4>Also, one doing a 10-fold cross-validation above, we see that the final model from stepwise regression has smaller prediction error (21%), when compared to 29% (chosen model above) &amp; 26% (datacamp exercise)</h4>
+</div>
 </div>
 </div>
 

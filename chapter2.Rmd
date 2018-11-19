@@ -45,6 +45,8 @@ pre { /* Code block - determines code spacing between lines */
 </style>
 
 
+# Regression and model validation (Week 2)
+
 ## Read Data
 ```{r echo=T}
 analysis_data <- read.csv("~/Documents/GitHub/IODS-project/data/learning2014.csv", 
