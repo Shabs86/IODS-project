@@ -327,11 +327,11 @@ dim(lda.fit$scaling)
 matrix_product <- as.matrix(model_predictors) %*% lda.fit$scaling
 matrix_product <- as.data.frame(matrix_product)
 
-# Plot
+# Plot with crime class in train
 plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type = 'scatter3d', mode = 'markers', color = train$crime)
 
-
-
+# Plot with k-means clusters
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type = 'scatter3d', mode = 'markers', color = cluster_target)
 ```
 
-
+### The plots differ in their aggregation, with the training dataset showing much clearerclusters and separation. Though using k-means clusters the accuracy is not that high
