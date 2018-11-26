@@ -128,7 +128,7 @@ ggplot(molten, aes(x = value, y = crim))+
 
 #### From above figure we do see rather some interesting patterns especially related to crime rates.
 
-# Standardize & observe
+## Standardize & observe
 ```{r echo=T}
 # Centering and standardizing variables
 boston_scaled <- scale(Boston)
@@ -183,7 +183,7 @@ correct_classes <- test$crime
 test <- dplyr::select(test, -crime)
 ```
 
-# LDA 
+## LDA 
 ```{r echo=T}
 # Linear discriminant analysis
 lda.fit <- lda(crime ~., data = train)
@@ -233,7 +233,7 @@ confusionMatrix(correct_classes, lda.pred$class)
 
 #### As we can see our predictive is around 67% accurate for low and medium low categories, and is worse for medium high category (57%) but is highly accurate for high category (100%)
 
-# k-means & visualization
+## k-means & visualization
 ```{r echo=T}
 # Euclidean distance matrix
 boston_scaled <- dplyr::select(boston_scaled, -crime)
@@ -291,7 +291,7 @@ plot(1:k.max, clust_TSS,
 #### Therefore for k=4 the Between_SS/Total_SS ratio tends to change slowly and remain less changing as compared to other k’s. So for this data k=4 should be a good choice for number of clusters.
 
 
-# Bonus
+## Bonus
 
 ```{r echo=T}
 # k-means clustering with 4 
@@ -312,7 +312,7 @@ lda.arrows(lda.fit, myscale = 2)
 
 ### We see that variables "zn" and "nox" seem to be the most influential linear separators for the clusters as seen from their positions in the cluster plot above
 
-# Super-Bonus: 
+## Super-Bonus: 
 
 Run the code below for the (scaled) train data that you used to fit the LDA. The code creates a matrix product, which is a projection of the data points.
 
