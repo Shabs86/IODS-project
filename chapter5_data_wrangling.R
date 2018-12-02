@@ -64,3 +64,10 @@ humans2 <- new_dat[1:(n-7), ]
 # Countries as rows
 rownames(humans2) <- humans2$Country
 humans2 <- humans2[, -1]
+
+# Set working directory & save file
+setwd("~/Documents/GitHub/IODS-project")
+getwd()
+write.table(humans2, "~/Documents/GitHub/IODS-project/data/humans2.txt", 
+            sep = "\t", row.names = TRUE) 
+
