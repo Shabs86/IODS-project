@@ -35,11 +35,32 @@ glimpse(dat)
 # Lab.F2M = FLab.Rate/MLab.Rate
 
 
-# 
+# Mutate the data: transform the Gross National Income (GNI) variable to numeric 
+# First making factors "clean"
+dat$GNIncome <- gsub(",","",dat$GNIncome)
+# Converting factors to numeric
+dat$GNIncome <- as.numeric(as.character(dat$GNIncome))
 
 
+# Exclude unneeded variables 
+needed <- c("Country", "Edu.F2M", "Lab.F2M", "Exp.school.years", "Life.expectancy",
+            "GNIncome", "Mat.Mort.Rate", "Adol.Birth.Rate", "Rep.Parliament...")
+new_dat <- dat[, colnames(dat) %in% needed]
 
 
+# Remove all rows with missing values
+new_dat <- drop_na(new_dat)
+# Check whether rows contain any zeros
+sum(apply(new_dat, 1, function(x){any(is.na(x))}) == TRUE)
 
 
+# Remove the observations which relate to regions instead of countries
+# We see that last 7 rows have data for regions than countries
+# Finding rows
+n <- dim(new_dat)[1]
+# Removing last 7 rows
+humans2 <- new_dat[1:(n-7), ]
 
+# Countries as rows
+rownames(humans2) <- humans2$Country
+humans2 <- humans2[, -1]
