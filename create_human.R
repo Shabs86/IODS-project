@@ -37,3 +37,5 @@ setwd("~/Documents/GitHub/IODS-project")
 getwd()
 write.table(human, "~/Documents/GitHub/IODS-project/data/human.txt", 
             sep = "\t", row.names = FALSE) 
+
+
