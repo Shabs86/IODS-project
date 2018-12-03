@@ -1,0 +1,289 @@
+---
+title: "Dimensionality reduction techniques"
+date: 02 Dec 2018
+output:
+html_document:
+theme: cerulean
+---
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 12px;
+  }
+td {  /* Table  */
+  font-size: 8px;
+}
+h1.title {
+  font-size: 30px;
+  color: DarkRed;
+}
+h1 { /* Header 1 */
+  font-size: 22px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 20px;
+  color: DarkBlue;
+}
+h3 { /* Header 3 */
+  font-size: 18px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkBlue;
+}
+h4 { /* Header 4 */
+  font-size: 14px;
+  font-family: "Times New Roman", Times, serif;
+  color: Black;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+
+# Dimensionality reduction techniques (Week 5)
+
+## Principle Components Analysis (PCA)
+
+### Read Data
+```{r echo=T}
+library("readxl")
+library("ggplot2")
+library("data.table")
+library("dplyr")
+library("stringr")
+library("tidyverse")
+library("GGally")
+library("ggplot2")
+library("MASS")
+library("corrplot")
+library("plotly")
+library("purrr")
+library("devtools")
+library("ggbiplot")
+library("gridExtra")
+library("grid")
+library("lattice")
+library("FactoMineR")
+
+analysis.data <- read.table("~/Documents/GitHub/IODS-project/data/humans2.txt", 
+                    header=TRUE)
+```
+
+
+### Description of data
+```{r echo=T}
+glimpse(analysis.data)
+```
+
+#### The dataset contains these 8 variables from the UN HDI dataset
+#### Life.expectancy =  Life Expectancy of each countries citizens
+#### Exp.school.years = Expected years of education of citizens living in the country
+#### GNIncome = Gross Income of each country
+#### Mat.Mort.Rate = Maternal mortality rate 
+#### Adol.Birth.Rate = Adolescent mortality Rate
+#### Rep.Parliament(%) = Percetange of female representatives in parliament
+#### Edu.F2M = FSec.edu/MSec.edu
+#### Lab.F2M = FLab.Rate/MLab.Rate
+
+
+### Explore distributions of variables and their relationships
+```{r echo=T}
+# General summary of the dataset
+summary(analysis.data)
+
+# Matrix of the variables
+pairs(analysis.data)
+
+# Correlation matrix
+cor_matrix <- cor(analysis.data) %>% round(2)
+corrplot(cor_matrix, method = "circle", type = "upper",
+cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+
+# Visualise distributions of the variables
+analysis.data %>% keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) + facet_wrap(~ key, scales = "free") + geom_histogram()
+```
+
+#### The variables as we see from the histograms, are all skewed. An interesting observation is to see the tail ends of Adolescent Birth rates and Maternal mortality rates. As they are similarly skewed, but have similar peaks in their tails. 
+
+#### Though many countries have around equal female to male education rate (Edu.2FM) but then we also see many countries which have very poor rates of female education. 
+
+#### Another thing of note here is that that the expected years on school is also widely varying in nature instead of it being skewed towards the right indicating majority of counties have good education, instead we see evidence of preponderance of poor education in the dataset. 
+
+#### In regards to life expectancy, though many countries have high rates, but many have quite low rates (~ <50 years).
+
+### Principal component analysis (with the SVD method)
+```{r echo=T}
+# PCA
+pca_human <- prcomp(analysis.data)
+
+# Draw a biplot of the principal component representation and the original variables
+# Using the ggbiplot package instead of normal biplot
+ggbiplot(pca_human,  choices=c(1,2), ellipse = TRUE, labels =  rownames(analysis.data)) +
+  scale_color_discrete(name = '') +
+  theme(legend.direction = 'horizontal', legend.position = 'top')
+```
+
+### Principal component analysis (with the SVD method) WITH Standardized variables
+```{r echo=T}
+# Standardize dataset
+human_std <- scale(analysis.data)
+
+# PCA
+pca_human_std <- prcomp(human_std)
+
+# Draw a biplot of the principal component representation and the original variables
+# Using the ggbiplot package instead of normal biplot
+ggbiplot(pca_human_std,  choices=c(1,2), ellipse = TRUE, labels =  rownames(analysis.data)) +
+  scale_color_discrete(name = '') +
+  theme(legend.direction = 'horizontal', legend.position = 'top')
+```
+
+
+#### As we can see from the above two PCA plots that they are remarkably different. The first PCA without standardization gives us a plot wherein PC1 explains all the available variation. While, the second PCA with standardized variables, gives us a more accurate picture of how different variables explain the data variability. 
+
+#### This is primarily because as we had seen in the data description earlier, variables were highly skewed, multi modal and magnitude of the variables influence the resulting PCs, hence the need to apply skewness transformation, center and scale the variables.  When we standardize the dataset with a standard deviation of 1, we scale the variables such that the skewness/kurtosis is reduced and the important featires of the variables come out.  
+
+### Let's look at what the various PC componenets explain in both above
+### First PCA with original dataset
+```{r echo=T}
+pca_human
+summary(pca_human)
+
+# Compute standard deviation of each principal component
+std_dev <- pca_human$sdev
+
+# Compute variance
+pr_var <- std_dev^2
+
+# Proportion of variance explained
+prop_varex <- pr_var/sum(pr_var)
+
+# Scree plot
+plot(prop_varex, xlab = "Principal Component",
+             ylab = "Proportion of Variance Explained",
+             type = "b")
+
+# Cumulative scree plot
+plot(cumsum(prop_varex), xlab = "Principal Component",
+              ylab = "Cumulative Proportion of Variance Explained",
+              type = "b")
+
+# Plot each variables coefficients inside a unit circle to get insight on a possible interpretation for PCs
+theta <- seq(0,2*pi,length.out = 100)
+circle <- data.frame(x = cos(theta), y = sin(theta))
+p <- ggplot(circle,aes(x,y)) + geom_path()
+
+loadings <- data.frame(pca_human$rotation, 
+                       .names = row.names(pca_human$rotation))
+p + geom_text(data=loadings, 
+              mapping=aes(x = PC1, y = PC2, label = .names, colour = .names)) +
+  coord_fixed(ratio=1) +
+  labs(x = "PC1", y = "PC2")
+
+```
+
+
+### Second PCA with standardized dataset
+```{r echo=T}
+pca_human_std
+summary(pca_human_std)
+
+# Compute standard deviation of each principal component
+std_dev <- pca_human_std$sdev
+
+# Compute variance
+pr_var <- std_dev^2
+
+# Proportion of variance explained
+prop_varex <- pr_var/sum(pr_var)
+
+# Scree plot
+plot(prop_varex, xlab = "Principal Component",
+             ylab = "Proportion of Variance Explained",
+             type = "b")
+
+# Cumulative scree plot
+plot(cumsum(prop_varex), xlab = "Principal Component",
+              ylab = "Cumulative Proportion of Variance Explained",
+              type = "b")
+
+# Plot each variables coefficients inside a unit circle to get insight on a possible interpretation for PCs
+theta <- seq(0,2*pi,length.out = 100)
+circle <- data.frame(x = cos(theta), y = sin(theta))
+p <- ggplot(circle,aes(x,y)) + geom_path()
+
+loadings <- data.frame(pca_human_std$rotation, 
+                       .names = row.names(pca_human_std$rotation))
+p + geom_text(data=loadings, 
+              mapping=aes(x = PC1, y = PC2, label = .names, colour = .names)) +
+  coord_fixed(ratio=1) +
+  labs(x = "PC1", y = "PC2")
+```
+
+#### The goal of PCA is to explain most of the variability in the data with a smaller number of variables than the original data set. Now, for a large data set with "n" variables, we could examine pairwise plots of each variable as we did above against every other variable, but even for moderate "n", the number of these plots becomes excessive and not useful. 
+
+#### In particular, we would like to find a low-dimensional representation of the data that captures as much of the information as possible.
+
+#### This is what PCA allows us to do, as it finds a low-dimensional representation of a data set that contains as much of the variation as possible. 
+
+#### As we see above that the main difference in both PCA's were, whether we had scaled the dataset or not, and the result was reflected in the principal components explaining the variance present. In the first PCA, all the variance is explained by first component which is quite incorrect, and we can clearly see the effect of variable skewness/kurtosis/distribution on the PC's. 
+
+#### However, in the second PCA with standardized dataset, with the variability of each variable fixed such that their sd = 1, we can see the truer picture with different PC's explaining different components of the dataset 
+
+#### As we see here, we can see a miinimum of 3 most relevant principal components. PC1 captures 53.6% of variation, PC2 16.2% and both PCs together capture almost 70% of variation. 
+
+#### The 1st PC seems to be about maternal mortality rate and adolescent birth rate. Both are highly associated variables! In the context of countries with low per capita income or GDP, both variables are quite heavily intertwined. This association or clustering (in the language of PCA's) is clearly a function of a number of factors, including the greater risk inherent in pregnancy and delivery owing to lack of adequate medical care, greater prevalence of infectious diseases, which are cofactors in some deaths and the higher incidence of pregnancy. 
+
+#### The 2nd PC seems to be about women mobility which is reflected by ratio of women to men in the work force and women representation in parliament. 
+
+
+## Multiple Correspondence Analysis (MCA)
+
+### Tea data from FactoMineR
+```{r echo=T}
+data(tea)
+```
+
+### Tea and variable distributions/summary
+```{r echo=T}
+# Select few variables
+keep <- c("Tea", "frequency", "sex", "How", "relaxing", "effect.on.health")
+tea_select <- dplyr::select(tea, one_of(keep))
+
+# Summary of the subsetted data
+glimpse(tea_select)
+
+# Visualise distributions of the variables
+gather(tea_select) %>% 
+  ggplot(aes(value)) + 
+  facet_wrap("key", scales = "free") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8)) + 
+  geom_bar()
+```
+
+What we see here is that Early Grey is the most consumed kind of Tea,majoriy responding Tea as relaxing however, no effect on health is seen on many, with majority of females amongst the responders and many responders have it alone at a high frequency of +2/day.   
+
+### MCA
+```{r echo=T}
+tea_mca <- MCA(tea_select, graph = FALSE)
+
+# Summary of MCA
+summary(tea_mca)
+
+# Description on the dimension of MCA:
+dimdesc(tea_mca)
+
+# Plotting MCA
+plot(tea_mca, invisible=c("ind"), habillage = "quali")
+```
+
+#### To begin with we see that around 24% of variance is captured by the two dimensions plotted here. 
+
+#### We can see that people who have earl grey tea might have it with lemon and may have it around 1/day but also suggest as Not relaxing. Also, females may have tea alone, at a frequency of +2/day to 3 to 6/week, but may not report effect on health. Whereas, males may have tea with milk and may report a +ve effect on health on consuming it 1 to 2/week.
