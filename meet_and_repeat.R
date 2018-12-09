@@ -25,20 +25,19 @@ BPRS$subject <- factor(BPRS$subject)
 RATS$ID <- as.factor(RATS$ID)
 RATS$Group <- factor(RATS$Group)
 
-# Convert to long form
+# Convert the datasets to long form 
 BPRSL <-  BPRS %>% gather(key = weeks, value = bprs, -treatment, -subject)
+# Extract the week number
+BPRSL <-  BPRSL %>% mutate(week = as.integer(substr(weeks,5,5)))
+
 RATSL <- RATS %>%
   gather(key = WD, value = Weight, -ID, -Group) %>%
   mutate(Time = as.integer(substr(WD,3,4)))
 
-
-
-
-
-
-
 # Set working directory & save file
 setwd("~/Documents/GitHub/IODS-project")
 getwd()
-write.table(human, "~/Documents/GitHub/IODS-project/data/human.txt", 
-            sep = "\t", row.names = FALSE) 
+write.table(BPRSL, "~/Documents/GitHub/IODS-project/data/BPRSL.txt", 
+            sep = "\t", row.names = FALSE, quote = FALSE) 
+write.table(RATSL, "~/Documents/GitHub/IODS-project/data/RATSL.txt", 
+            sep = "\t", row.names = FALSE, quote = FALSE) 
