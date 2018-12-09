@@ -64,10 +64,7 @@ library("devtools")
 library("gridExtra")
 library("grid")
 library("lattice")
-library("FactoMineR")
 library("lme4")
-library("ggpubr")
-
 ```
 
 ### Reading data
@@ -293,6 +290,8 @@ summary(interaction.bprs)
 anova(interaction.bprs, mix.reg.bprs)
 ```
 
+#### As we want to compare the fit to the original data, we should use fitted. The fitted function returns the y-hat values associated with the data used to fit the model. 
+
 ### Add fitted values as column in BPRSL
 ```{r echo=T}
 # Create a vector of the fitted values
@@ -302,21 +301,21 @@ Fitted <- fitted(interaction.bprs)
 BPRSL <- BPRSL %>%
   mutate(Fitted)
 
-#Fitted plot
+# Fitted 
 ggplot(BPRSL, aes(x = week, y = Fitted, linetype = subject)) +
   geom_line(aes(col=treatment)) +
   scale_linetype_manual(values = rep(1:10, times=4)) +
   theme(legend.position = "none") +
   scale_y_continuous(limits = c(min(BPRSL$Fitted), max(BPRSL$bprs))) +
-  ggtitle("Fitted")
+  ggtitle("Fitted with interaction model")
 
-#Observed plot
+# Observed 
 ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
   geom_line(aes(col=treatment)) +
   scale_linetype_manual(values = rep(1:10, times=4)) +
   theme(legend.position = "none") +
   scale_y_continuous(limits = c(min(BPRSL$Fitted), max(BPRSL$bprs))) +
-  ggtitle("Observed")
+  ggtitle("Observed with initial values")
 ```
 
 #### We see that interaction models dont explain the data much as fitted plots differ much from the observed plot. 
