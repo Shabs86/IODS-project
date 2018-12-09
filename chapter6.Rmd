@@ -47,8 +47,7 @@ pre { /* Code block - determines code spacing between lines */
 
 # Analysis of longitudinal data (Week 6)
 
-### Read Data
-```{r echo=F}
+```{r, include = FALSE, echo = FALSE}
 library("readxl")
 library("ggplot2")
 library("data.table")
@@ -62,16 +61,20 @@ library("corrplot")
 library("plotly")
 library("purrr")
 library("devtools")
-library("ggbiplot")
 library("gridExtra")
 library("grid")
 library("lattice")
 library("FactoMineR")
+library("lme4")
+library("ggpubr")
 
-rats.data <- read.table("~/Documents/GitHub/IODS-project/data/RATSL.txt", 
-                    header=TRUE)
-bprs.data <- read.table("~/Documents/GitHub/IODS-project/data/BPRSL.txt", 
-                    header=TRUE)
+```
+
+### Reading data
+```{r echo=T}
+RATSL <- read.csv("data/RATSL.csv")
+BPRSL <- read.csv("data/BPRSL.csv")
+BPRS <- read.csv("data/BPRS.csv")
 ```
 
 
@@ -79,14 +82,14 @@ bprs.data <- read.table("~/Documents/GitHub/IODS-project/data/BPRSL.txt",
 
 ### Refactoring the variables in dataset
 ```{r echo=T}
-rats.data$ID <- factor(rats.data$ID)
-rats.data$Group <- factor(rats.data$Group)
-rats.data$WD <- as.character(rats.data$WD)
-glimpse(rats.data)
+RATSL$ID <- factor(RATSL$ID)
+RATSL$Group <- factor(RATSL$Group)
+RATSL$WD <- as.character(RATSL$WD)
+glimpse(RATSL)
 ```
 
 ```{r echo=T}
-head(rats.data)
+head(RATSL)
 ```
 
 #### The data comes from a nutrition study conducted in three groups of rats. The groups were put on different diets, and each animal’s body weight (grams) was recorded repeatedly (approximately) weekly, except in week seven when two recordings were taken) over a 9-week period. The question of most interest is whether the growth profiles of the three groups differ.
@@ -94,12 +97,12 @@ head(rats.data)
 ### Plotting rat data wrt diet groups
 ```{r echo=T}
 # Draw the plot
-ggplot(rats.data, aes(x = Time, y = Weight, linetype = ID)) +
+ggplot(RATSL, aes(x = Time, y = Weight, linetype = ID)) +
   geom_line() +
   scale_linetype_manual(values = rep(1:10, times=4)) +
   facet_grid(. ~ Group, labeller = label_both) +
   theme(legend.position = "none") + 
-  scale_y_continuous(limits = c(min(rats.data$Weight), max(rats.data$Weight)))
+  scale_y_continuous(limits = c(min(RATSL$Weight), max(RATSL$Weight)))
 ```
 
 #### From the above plot we see that all the rats have put up weight during the duration of study. In group 1, one rat had a lower weight compared to others when the study started. Also the slope in group 1, we see that rats in group 1 did not gain weight.
@@ -109,10 +112,211 @@ ggplot(rats.data, aes(x = Time, y = Weight, linetype = ID)) +
 #### Taking above points, under consideration we see no change in variation between the rats.
 
 
-### Standardising and plotting the data
+### Standardising & plots
 ```{r echo=T}
+RATSSTD <- RATSL %>%
+  group_by(Time) %>%
+  mutate(stdWeight = (Weight - mean(Weight))/sd(Weight) ) %>%
+  ungroup()
 
+glimpse(RATSSTD)
+
+# Re-Draw the plot above from standardised data
+ggplot(RATSSTD, aes(x = Time, y = stdWeight, linetype = ID)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(name = "standardised RATS")
 ```
 
+### Graphical summary
+```{r echo=T}
+# Number of weeks, baseline (week 0) included
+n <- RATSL$Time %>% unique() %>% length()
+
+# Summary data with mean and standard error of bprs by treatment 
+# and week 
+detach(package:ggbiplot)
+detach(package:plyr)
+RATSS <- RATSL %>%
+  group_by(Group, Time) %>%
+  summarise( mean = mean(Weight), se = sd(Weight)/sqrt(n) ) %>% 
+  ungroup()
+
+# Glimpse the data
+glimpse(RATSS)
+```
+
+### Plot mean profiles
+```{r echo=T}
+ggplot(RATSS, aes(x = Time, y = mean, linetype = Group, shape = Group)) +
+  geom_line() +
+  scale_linetype_manual(values = c(1,2,3)) +
+  geom_point(size=3) +
+  scale_shape_manual(values = c(1,2,3)) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se, linetype="1"), width = 0.3) +
+  theme(legend.position = c(0.8,0.35)) +
+  scale_y_continuous(name = "mean(Weight) +/- se(Weight)")
+```
+
+#### The visualization of summary daat provides a much better overall picture than the individual level data.
+
+#### We see that the average weight of rats has increased during the study. 
+
+### Boxplots across groups to spot outliers
+```{r echo=T}
+RATSL.box <- RATSL %>%
+  filter(Time > 1) %>%
+  group_by(Group, ID) %>%
+  summarise( mean=mean(Weight) ) %>%
+  ungroup()
+
+# Glimpse the data
+glimpse(RATSL.box)
+
+# Draw boxplot
+ggplot(RATSL.box, aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun.y = "mean", geom = "point", shape = 25, size = 4, fill = "white") +
+  scale_y_continuous(name = "mean(RATS)")
+```
+
+#### As we see, outliers exist across all groups here. So, we should remove them and replot
+
+### Create a new data by filtering the outlier and adjust the ggplot code the draw the plot again with the new data
+```{r echo=T}
+RATSL.box.out <- filter(RATSL.box, 
+                        (Group == 1 & mean > 250) | 
+                          (Group == 2 & mean < 590) | 
+                          (Group == 3 & mean > 500))
+
+ggplot(RATSL.box.out, aes(x = Group, y = mean)) +
+  geom_boxplot() +
+  stat_summary(fun.y = "mean", geom = "point", shape=25, size=4, fill = "white") +
+  scale_y_continuous(name = "mean(RATS)")
+```
+
+#### The box plots from both datasets are quite different, especially for group 2. There is lesser variance in the averages of the study groups.
+
+### Statistical testing between groups
+```{r echo=T}
+anova_rats <- aov(mean ~ Group, data = RATSL.box.out)
+summary(anova_rats)
+```
+
+#### We see that there is a big statistical difference between groups (p value = 1.69e-14) as evidenced from the boxplots above. 
 
 
+
+## Chapter 9 of MABS using the BPRS data
+```{r echo=T}
+# Refactoring
+BPRSL$subject <- factor(BPRSL$subject)
+BPRSL$treatment <- factor(BPRSL$treatment)
+BPRSL$weeks <- as.character(BPRSL$weeks)
+BPRS$subject <- factor(BPRS$subject)
+BPRS$treatment <- factor(BPRS$treatment)
+```
+
+```{r echo=T}
+head(BPRSL)
+```
+
+#### The data comes from a study in which 40 male subjects were randomly assigned to one of two treatment groups and each subject was rated on the brief psychiatric rating scale (BPRS) measured before treatment began (week 0) and then at weekly intervals for eight weeks. The BPRS assesses the level of 18 symptom constructs such as hostility, suspiciousness, hallucinations and grandiosity; each of these is rated from one (not present) to seven (extremely severe). The scale is used to evaluate patients suspected of having schizophrenia.
+
+### Plotting rat data wrt diet groups
+```{r echo=T}
+# initialize plot with data and aesthetic mapping
+ggplot(BPRSL, aes(x = week, y = bprs, col=treatment)) + 
+  geom_point(size = 3, alpha = .3) + 
+  geom_smooth(method = "lm") + 
+  theme_minimal()
+```
+
+#### We see that bprs decreases across weeks.This might mean that patients’ condition rated less severe in the end.
+
+```{r echo=T}
+ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
+  geom_line(aes(col=treatment)) +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
+```
+
+#### We don't see much evidence of differences across treatments
+
+### Linear model
+```{r echo=T}
+# create a regression model RATS_reg model
+# bprs ~ week + d1
+reg.bprs <- lm(bprs ~ week + treatment, data = BPRSL)
+
+# print out a summary of the model
+summary(reg.bprs)
+```
+
+#### Its interesting to note that treatment is not significant but week is. What this means that the bprs values change in time (acorss weeks) but treatment doesn not play any significant effect in this change. 
+
+
+### Linear mixed model (random slopes + random intercepts)
+```{r echo=T}
+# Random intercept model
+intercept.bprs <- lmer(bprs ~ week + treatment + (1 | subject),
+                   data = BPRSL, REML = FALSE)
+summary(intercept.bprs)
+
+# Random intercept + random slope model
+mix.reg.bprs <- lmer(bprs ~ week + treatment + (week | subject), 
+                     data = BPRSL, REML = FALSE)
+
+# Summary of the model
+summary(mix.reg.bprs)
+
+# ANOVA test
+anova(mix.reg.bprs, intercept.bprs)
+```
+
+#### The models are significantly different (p-value = 0.02636). 
+
+### Including interaction in the models
+```{r echo=T}
+# Model with interaction between time and treatment
+interaction.bprs <- lmer(bprs ~ week * treatment + (week | subject), 
+                         data = BPRSL, REML = FALSE)
+
+# Summary of the model
+summary(interaction.bprs)
+
+# ANOVA test
+anova(interaction.bprs, mix.reg.bprs)
+```
+
+### Add fitted values as column in BPRSL
+```{r echo=T}
+# Create a vector of the fitted values
+Fitted <- fitted(interaction.bprs)
+
+# Create a new column fitted to RATSL
+BPRSL <- BPRSL %>%
+  mutate(Fitted)
+
+#Fitted plot
+ggplot(BPRSL, aes(x = week, y = Fitted, linetype = subject)) +
+  geom_line(aes(col=treatment)) +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  theme(legend.position = "none") +
+  scale_y_continuous(limits = c(min(BPRSL$Fitted), max(BPRSL$bprs))) +
+  ggtitle("Fitted")
+
+#Observed plot
+ggplot(BPRSL, aes(x = week, y = bprs, linetype = subject)) +
+  geom_line(aes(col=treatment)) +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  theme(legend.position = "none") +
+  scale_y_continuous(limits = c(min(BPRSL$Fitted), max(BPRSL$bprs))) +
+  ggtitle("Observed")
+```
+
+#### We see that interaction models dont explain the data much as fitted plots differ much from the observed plot. 

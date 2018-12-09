@@ -41,3 +41,6 @@ write.table(BPRSL, "~/Documents/GitHub/IODS-project/data/BPRSL.txt",
             sep = "\t", row.names = FALSE, quote = FALSE) 
 write.table(RATSL, "~/Documents/GitHub/IODS-project/data/RATSL.txt", 
             sep = "\t", row.names = FALSE, quote = FALSE) 
+write.csv(BPRSL,"data/BPRSL.csv", row.names=FALSE)
+write.csv(RATSL,"data/RATSL.csv", row.names=FALSE)
+write.csv(BPRS,"data/BPRS.csv", row.names=FALSE)
