@@ -47,10 +47,8 @@ pre { /* Code block - determines code spacing between lines */
 
 # Analysis of longitudinal data (Week 6)
 
-## Principle Components Analysis (PCA)
-
 ### Read Data
-```{r echo=T}
+```{r echo=F}
 library("readxl")
 library("ggplot2")
 library("data.table")
@@ -70,12 +68,51 @@ library("grid")
 library("lattice")
 library("FactoMineR")
 
-analysis.data <- read.table("~/Documents/GitHub/IODS-project/data/humans2.txt", 
+rats.data <- read.table("~/Documents/GitHub/IODS-project/data/RATSL.txt", 
+                    header=TRUE)
+bprs.data <- read.table("~/Documents/GitHub/IODS-project/data/BPRSL.txt", 
                     header=TRUE)
 ```
 
 
-### Description of data
+## Chapter 8 of MABS using the RATS data
+
+### Refactoring the variables in dataset
 ```{r echo=T}
-glimpse(analysis.data)
+rats.data$ID <- factor(rats.data$ID)
+rats.data$Group <- factor(rats.data$Group)
+rats.data$WD <- as.character(rats.data$WD)
+glimpse(rats.data)
 ```
+
+```{r echo=T}
+head(rats.data)
+```
+
+#### The data comes from a nutrition study conducted in three groups of rats. The groups were put on different diets, and each animal’s body weight (grams) was recorded repeatedly (approximately) weekly, except in week seven when two recordings were taken) over a 9-week period. The question of most interest is whether the growth profiles of the three groups differ.
+
+### Plotting rat data wrt diet groups
+```{r echo=T}
+# Draw the plot
+ggplot(rats.data, aes(x = Time, y = Weight, linetype = ID)) +
+  geom_line() +
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ Group, labeller = label_both) +
+  theme(legend.position = "none") + 
+  scale_y_continuous(limits = c(min(rats.data$Weight), max(rats.data$Weight)))
+```
+
+#### From the above plot we see that all the rats have put up weight during the duration of study. In group 1, one rat had a lower weight compared to others when the study started. Also the slope in group 1, we see that rats in group 1 did not gain weight.
+
+#### We see clear evidence of tracking (defined as rats who have higher weight values at the beginning tend to have higher values, in the study) for all the groups under study.
+
+#### Taking above points, under consideration we see no change in variation between the rats.
+
+
+### Standardising and plotting the data
+```{r echo=T}
+
+```
+
+
+
